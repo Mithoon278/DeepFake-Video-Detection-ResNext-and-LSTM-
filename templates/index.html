@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Video Detection</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Deepfake Video Detection</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="file">Upload Video:</label>
+        <input type="file" id="file" name="file" accept="video/*" required>
+        <button type="submit">Upload and Predict</button>
+    </form>
+    <div id="result"></div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('file');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            // Upload the file
+            const uploadResponse = await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const uploadResult = await uploadResponse.json();
+            if (uploadResponse.ok) {
+                const { filename } = uploadResult;
+
+                // Predict on the uploaded video
+                const predictResponse = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename }),
+                });
+
+                const predictResult = await predictResponse.json();
+                document.getElementById('result').innerText = JSON.stringify(predictResult, null, 2);
+            } else {
+                document.getElementById('result').innerText = uploadResult.error;
+            }
+        });
+    </script>
+</body>
+</html>
